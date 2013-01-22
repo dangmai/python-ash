@@ -1,2 +1,9 @@
 python_env
-test.py
+MANIFEST
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+pip-log.txt
