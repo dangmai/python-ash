@@ -53,7 +53,7 @@ def _check_virtualenv(venv_command):
     try:
         command = "%s --version" % (venv_command)
         logger.debug("Checking virtualenv with command: %s" % (command))
-        subprocess.call(command, stdout=open(os.devnull, 'wb'))
+        subprocess.call(command, stdout=open(os.devnull, 'wb'), shell=True)
     except:
         return False
     return True
@@ -70,7 +70,7 @@ def _create_venv(venv_command, directory, args):
     else:
         command = "%s %s" % (venv_command, directory)
     logger.debug("Create env with command: %s", command)
-    return subprocess.call(command)
+    return subprocess.call(command, shell=True)
 
 
 def _activate_venv(dir):
@@ -78,6 +78,8 @@ def _activate_venv(dir):
     Activate a virtualenv, given its directory.
     """
     activate_file = os.path.join(dir, "Scripts", "activate_this.py")
+    if not os.path.exists(activate_file):  # for Linux system
+        activate_file = os.path.join(dir, "bin", "activate_this.py")
     logger.debug("Activating virtualenv with file %s", activate_file)
     execfile(activate_file, dict(__file__=activate_file))
 
