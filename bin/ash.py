@@ -6,6 +6,8 @@ import subprocess
 import logging
 import json
 
+logger = logging.getLogger("ash")
+
 
 def _walk_up(bottom):
     """
@@ -38,9 +40,9 @@ def _get_env_dir(venv_dir_name):
     for curr_dir, included_dirs, included_files in _walk_up(os.getcwd()):
         if venv_dir_name in included_dirs:
             env = os.path.join(curr_dir, venv_dir_name)
-            logging.debug("virtualenv found! %s", env)
+            logger.debug("virtualenv found! %s", env)
             return env
-    logging.debug("No virtualenv found with dir name %s" % (venv_dir_name))
+    logger.debug("No virtualenv found with dir name %s" % (venv_dir_name))
     return False
 
 
@@ -50,7 +52,7 @@ def _check_virtualenv(venv_command):
     """
     try:
         command = "%s --version" % (venv_command)
-        logging.debug("Checking virtualenv with command: %s" % (command))
+        logger.debug("Checking virtualenv with command: %s" % (command))
         subprocess.call(command, stdout=open(os.devnull, 'wb'))
     except:
         return False
@@ -67,7 +69,7 @@ def _create_venv(venv_command, directory, args):
         command = "%s %s %s" % (venv_command, args, directory)
     else:
         command = "%s %s" % (venv_command, directory)
-    logging.debug("Create env with command: %s", command)
+    logger.debug("Create env with command: %s", command)
     return subprocess.call(command)
 
 
@@ -76,7 +78,7 @@ def _activate_venv(dir):
     Activate a virtualenv, given its directory.
     """
     activate_file = os.path.join(dir, "Scripts", "activate_this.py")
-    logging.debug("Activating virtualenv with file %s", activate_file)
+    logger.debug("Activating virtualenv with file %s", activate_file)
     execfile(activate_file, dict(__file__=activate_file))
 
 
@@ -102,22 +104,35 @@ def _get_config():
 
 def main():
     config = _get_config()
-    if config["debug"]:
-        logging.basicConfig(level=logging.DEBUG)
-    logging.info("Program configured and ready to roll")
+    # Configure logging
+    logger.setLevel(logging.DEBUG)  # baseline level, fine tune later on
+    log_handler = logging.StreamHandler()
+    if not config["debug"]:
+        log_handler.setLevel(logging.INFO)
+        log_handler.setFormatter(logging.Formatter('%(message)s'))
+    else:
+        log_handler.setLevel(logging.DEBUG)
+        log_handler.setFormatter(
+            logging.Formatter(
+                '%(levelname)s %(asctime)s: %(message)s'
+            )
+        )
+    logger.addHandler(log_handler)
+    logger.debug("Program configured and ready to roll")
+
     if not _check_virtualenv(config["venv_command"]):
-        print("It seems that virtualenv is not installed on this system. " +
-            "Exiting now.")
+        logger.warning("It seems that virtualenv is not installed on this " +
+            "system. Exiting now.")
         sys.exit(3)
 
     if len(sys.argv) <= 1:
-        print("Do something!")
+        logger.info("Do something!")
         sys.exit(2)
     venv = _get_env_dir(config["venv_dir_name"])
 
     if sys.argv[1] == "init":
         if venv:
-            print("You are already inside a virtual environment!")
+            logger.warning("You are already inside a virtual environment!")
             sys.exit(1)
         args = " ".join(sys.argv[2:]) if (len(sys.argv) > 2) else None
 
@@ -126,7 +141,7 @@ def main():
 
     _activate_venv(venv)
     command = " ".join(sys.argv[1:])
-    logging.info("Command to call: %s", command)
+    logger.debug("Command to call: %s", command)
     subprocess.call(command, shell=True)
 
 if __name__ == "__main__":
