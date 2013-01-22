@@ -19,8 +19,7 @@ Installation
 
 Put ``ash.py`` into a directory in your PATH. That's it.
 
-I'm also figuring out how to package Ash for PyPI. Once that is done, you will
-be able to::
+Or you could go the easy route and use `pip`_ like the following::
 
     pip install ash
 
@@ -75,3 +74,4 @@ values) are available::
 .. _virtualenv: http://www.virtualenv.org
 .. _npm: https://npmjs.org/
 .. _virtualenvwrapper: http://www.doughellmann.com/projects/virtualenvwrapper/
+.. _pip: http://www.pip-installer.org
