@@ -121,19 +121,27 @@ def main():
     logger.debug("Program configured and ready to roll")
 
     if not _check_virtualenv(config["venv_command"]):
-        logger.warning("It seems that virtualenv is not installed on this " +
-            "system. Exiting now.")
+        logger.error("It seems that virtualenv is not installed or "
+            "configured properly on this system. Exiting now.")
         sys.exit(3)
 
     if len(sys.argv) <= 1:
-        logger.info("Do something!")
+        logger.info("You didn't specify what to do. Refer to the README file "
+            "for the commands that ash supports. Exiting now.")
         sys.exit(2)
     venv = _get_env_dir(config["venv_dir_name"])
 
     if sys.argv[1] == "init":
         if venv:
-            logger.warning("You are already inside a virtual environment!")
-            sys.exit(1)
+            if venv == os.path.join(os.getcwd(), config["venv_dir_name"]):
+                logger.warning("I found an existing virtualenv in this "
+                    "directory. Exiting now.")
+                sys.exit(1)
+            else:
+                logger.warning("There is an existing virtualenv up the "
+                    "directory hierarchy at %s. I will continue to make a "
+                    "virtualenv in this directory. If it's not what you want, "
+                    "simply delete the created directory." % (venv))
         args = " ".join(sys.argv[2:]) if (len(sys.argv) > 2) else None
 
         sys.exit(_create_venv(config["venv_command"],
