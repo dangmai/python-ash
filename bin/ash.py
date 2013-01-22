@@ -4,8 +4,7 @@ import os
 import sys
 import subprocess
 import logging
-
-ENV_DIR_NAME = "python_env"
+import json
 
 
 def _walk_up(bottom):
@@ -31,41 +30,43 @@ def _walk_up(bottom):
         yield x
 
 
-def _get_env_dir():
+def _get_env_dir(venv_dir_name):
     """
     Get the virtualenv from this dir or parent dirs. If no virtualenv is found,
     this returns False
     """
     for curr_dir, included_dirs, included_files in _walk_up(os.getcwd()):
-        if ENV_DIR_NAME in included_dirs:
-            env = os.path.join(curr_dir, ENV_DIR_NAME)
+        if venv_dir_name in included_dirs:
+            env = os.path.join(curr_dir, venv_dir_name)
             logging.debug("virtualenv found! %s", env)
             return env
-    logging.debug("No virtualenv found")
+    logging.debug("No virtualenv found with dir name %s" % (venv_dir_name))
     return False
 
 
-def _check_virtualenv():
+def _check_virtualenv(venv_command):
     """
     Check for the existence of virtualenv
     """
     try:
-        subprocess.call("virtualenv --version", stdout=open(os.devnull, 'wb'))
+        command = "%s --version" % (venv_command)
+        logging.debug("Checking virtualenv with command: %s" % (command))
+        subprocess.call(command, stdout=open(os.devnull, 'wb'))
     except:
         return False
     return True
 
 
-def _create_venv(directory, args):
+def _create_venv(venv_command, directory, args):
     """
     Create a virtual environment. Right now it is using virtualenv through the
     command line, but later on I may change this to the virtualenv API, or venv
     in later versions of Python 3.
     """
     if args:
-        command = "virtualenv %s %s" % (args, directory)
+        command = "%s %s %s" % (venv_command, args, directory)
     else:
-        command = "virtualenv %s" % (directory)
+        command = "%s %s" % (venv_command, directory)
     logging.debug("Create env with command: %s", command)
     return subprocess.call(command)
 
@@ -79,12 +80,32 @@ def _activate_venv(dir):
     execfile(activate_file, dict(__file__=activate_file))
 
 
+def _get_config():
+    """
+    Get the config for this program, returning a dict with the settings.
+    """
+    default_config = {
+        "venv_command": "virtualenv",
+        "venv_dir_name": "python_env",
+        "debug": False
+    }
+    config = {}  # the config that is read from the config file
+    config_location = os.path.join(os.path.expanduser("~"), ".ashconfig")
+    if (os.path.exists(config_location)):
+        config_file = open(config_location, "r")
+        config = json.loads(config_file.read())
+        config_file.close()
+    result = default_config.copy()
+    result.update(config)
+    return result
+
+
 def main():
-    if "ASH_DEBUG" in os.environ and os.environ["ASH_DEBUG"] == "TRUE":
-        # Allow for debugging
+    config = _get_config()
+    if config["debug"]:
         logging.basicConfig(level=logging.DEBUG)
-    logging.info("Main called")
-    if not _check_virtualenv():
+    logging.info("Program configured and ready to roll")
+    if not _check_virtualenv(config["venv_command"]):
         print("It seems that virtualenv is not installed on this system. " +
             "Exiting now.")
         sys.exit(3)
@@ -92,7 +113,7 @@ def main():
     if len(sys.argv) <= 1:
         print("Do something!")
         sys.exit(2)
-    venv = _get_env_dir()
+    venv = _get_env_dir(config["venv_dir_name"])
 
     if sys.argv[1] == "init":
         if venv:
@@ -100,7 +121,8 @@ def main():
             sys.exit(1)
         args = " ".join(sys.argv[2:]) if (len(sys.argv) > 2) else None
 
-        sys.exit(_create_venv(os.path.join(os.getcwd(), ENV_DIR_NAME), args))
+        sys.exit(_create_venv(config["venv_command"],
+            os.path.join(os.getcwd(), config["venv_dir_name"]), args))
 
     _activate_venv(venv)
     command = " ".join(sys.argv[1:])
