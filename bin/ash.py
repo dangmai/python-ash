@@ -149,7 +149,11 @@ def main():
         sys.exit(_create_venv(config["venv_command"],
             os.path.join(os.getcwd(), config["venv_dir_name"]), args))
 
-    _activate_venv(venv)
+    if not venv:
+        logger.warning("I cannot detect a virtual environment in this "
+            "directory hierarchy. The command will be run as-is.")
+    else:
+        _activate_venv(venv)
     command = " ".join(sys.argv[1:])
     logger.debug("Command to call: %s", command)
     subprocess.call(command, shell=True)
