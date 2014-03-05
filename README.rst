@@ -11,8 +11,8 @@ have to remember to switch among different environments when they work on
 different projects.
 
 Ash tries to be as cross platform as possible. As of this moment, I've used Ash
-successfully on Windows and Linux. If you can help with testing/debugging Ash on
-other platforms, I would appreciate it very much.
+successfully on Windows, Linux and OSX with both Python 2 and 3. If you can help
+with testing/debugging Ash on other platforms, I would appreciate it very much.
 
 Installation
 ============

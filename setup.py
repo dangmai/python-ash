@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='Ash',
-    version='0.1.2',
+    version='0.1.3',
     author='Dang Mai',
     author_email='contact@dangmai.net',
     scripts=['bin/ash.py'],
