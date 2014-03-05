@@ -81,7 +81,7 @@ def _activate_venv(dir):
     if not os.path.exists(activate_file):  # for Linux system
         activate_file = os.path.join(dir, "bin", "activate_this.py")
     logger.debug("Activating virtualenv with file %s", activate_file)
-    execfile(activate_file, dict(__file__=activate_file))
+    exec(open(activate_file).read(), dict(__file__=activate_file))
 
 
 def _get_config():
